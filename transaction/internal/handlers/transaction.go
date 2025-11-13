@@ -119,7 +119,7 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) {
 		AmountCents: body.AmountCents,
 		Category:    body.Category,
 		Notes:       body.Description,
-		Currency:    "USD",
+		Currency:    "VND",
 		Date:        time.Now().UTC(),
 	}
 

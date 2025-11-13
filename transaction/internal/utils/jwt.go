@@ -36,7 +36,7 @@ func VerifyToken(next http.Handler) http.Handler {
 			return
 		}
 
-		idStr, ok := claims["id"].(string)
+		idStr, ok := claims["user_id"].(string)
 		if !ok {
 			http.Error(w, "invalid token payload", http.StatusUnauthorized)
 			return
