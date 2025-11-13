@@ -3,6 +3,7 @@ import { assets } from "../assets/assets";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { TransactionContext } from "../context/TransactionContext";
 import { FiLogOut } from "react-icons/fi";
+import Swal from "sweetalert2";
 
 const Navbar = () => {
   const baseClass = "flex flex-col items-center gap-1 group";
@@ -10,8 +11,19 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setToken(null); // Clear token in context
-    navigate("/login");
+    Swal.fire({
+      title: "Bạn có chắc muốn đăng xuất?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Đăng xuất",
+      cancelButtonText: "Hủy",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setToken(null); // Clear token
+        Swal.fire("Đã đăng xuất!", "", "success");
+        navigate("/login");
+      }
+    });
   };
 
   return (
@@ -30,9 +42,7 @@ const Navbar = () => {
               key={item.name}
               to={item.path}
               className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? "active" : ""
-                } hover:text-amber-500 transition-colors`
+                `${baseClass} ${isActive ? "active" : ""} hover:text-amber-500 transition-colors`
               }
             >
               <p className="text-2xl">{item.name}</p>
