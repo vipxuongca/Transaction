@@ -1,13 +1,18 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { assets } from "../assets/assets";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { TransactionContext } from "../context/TransactionContext";
-import { FiUser } from "react-icons/fi";
+import { FiLogOut } from "react-icons/fi";
 
 const Navbar = () => {
   const baseClass = "flex flex-col items-center gap-1 group";
-  const [visible, setVisible] = useState(false);
-  const { token } = useContext(TransactionContext);
+  const { token, setToken } = useContext(TransactionContext);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setToken(null); // Clear token in context
+    navigate("/login");
+  };
 
   return (
     <div className="flex items-center justify-between py-3 px-4 md:px-8 sticky top-0 z-50 bg-white text-black shadow-lg">
@@ -37,13 +42,23 @@ const Navbar = () => {
         </ul>
       </div>
 
-      {/* LOGIN BUTTON */}
+      {/* LOGOUT BUTTON */}
       <div className="flex items-center gap-6">
-        <Link to={!token ? "/login" : "/user"}>
-          <button className="flex items-center justify-center w-12 h-12 rounded-none border border-black bg-white text-black">
-            <FiUser className="w-5 h-5" />
+        {token ? (
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center w-12 h-12 rounded-none border border-black bg-white text-black hover:bg-gray-100 transition-all"
+          >
+            <FiLogOut className="w-5 h-5" />
           </button>
-        </Link>
+        ) : (
+          <button
+            onClick={() => navigate("/login")}
+            className="flex items-center justify-center w-12 h-12 rounded-none border border-black bg-white text-black hover:bg-gray-100 transition-all"
+          >
+            <FiLogOut className="w-5 h-5" />
+          </button>
+        )}
       </div>
     </div>
   );
