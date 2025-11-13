@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"github.com/go-chi/chi/v5"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"transaction/models"
 )
 
@@ -99,9 +99,12 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		AmountCents int64  `json:"amount_cents"`
 		Type        string `json:"type"`
-		Description string `json:"description"`
+		Notes       string `json:"notes"` 
 		Category    string `json:"category"`
+		Currency    string `json:"currency"`
 	}
+	
+
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid body"})
 		return
@@ -118,7 +121,7 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) {
 		Type:        transactions.TransactionType(body.Type),
 		AmountCents: body.AmountCents,
 		Category:    body.Category,
-		Notes:       body.Description,
+		Notes:       body.Notes,
 		Currency:    "VND",
 		Date:        time.Now().UTC(),
 	}

@@ -16,11 +16,6 @@ const Navbar = () => {
       </Link>
 
       <div className="flex flex-col items-center">
-        <img
-          src={assets.company}
-          alt="Company Name"
-          className="md:h-12 mb-3 object-contain"
-        />
         <ul className="hidden sm:flex gap-6 text-base">
           {[
             { name: "GIAO DỊCH", path: "/transaction" },
@@ -35,7 +30,7 @@ const Navbar = () => {
                 } hover:text-amber-500 transition-colors`
               }
             >
-              <p>{item.name}</p>
+              <p className="text-2xl">{item.name}</p>
               <hr className="w-2/4 border-none h-[1.5px] bg-amber-400 invisible group-[.active]:visible group-hover:visible transition-all" />
             </NavLink>
           ))}

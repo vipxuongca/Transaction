@@ -1,12 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import {
-  Login,
-  Register,
-  Report,
-  Transaction,
-  User,
-  NotFound,
-} from "./pages";
+import { Login, Register, Report, Transaction, User, NotFound } from "./pages";
 import Navbar from "./components/Navbar.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,10 +17,11 @@ const App = () => {
       <TopScroll />
 
       {token === "" ? (
-        <Login />
+        <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+          <Login />
+        </div>
       ) : (
         <>
-          {/* Apply padding only if not in /user */}
           <div className={isUserRoute ? "" : "px-4 lg:px-[4vw]"}>
             <Routes>
               <Route path="/register" element={<Register />} />
