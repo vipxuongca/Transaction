@@ -8,6 +8,7 @@ import (
 	"time"
 	// "log"
 	"fmt"
+	"strings"
 
 	"oauth-service/config"
 	"oauth-service/internal/utils"
@@ -128,9 +129,9 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Generate JWT
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id": existingUser.ID.Hex(),
-		"email":   googleUser.Email,
-		"exp":     time.Now().Add(60 * time.Minute).Unix(),
+		"id":    existingUser.ID.Hex(),
+		"email": googleUser.Email,
+		"exp":   time.Now().Add(60 * time.Minute).Unix(),
 	})
 
 	tokenString, err := jwtToken.SignedString(jwtSecret)
@@ -153,7 +154,13 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserProfile(w http.ResponseWriter, r *http.Request) {
-	tokenString := r.Header.Get("Authorization")
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		http.Error(w, "Missing or invalid Authorization header", http.StatusUnauthorized)
+		return
+	}
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
 	if tokenString == "" {
 		http.Error(w, "Missing token", http.StatusUnauthorized)
 		return
@@ -171,7 +178,7 @@ func GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	email := claims["email"].(string)
 
 	db := utils.GetDB()
-	usersColl := db.Collection("user")
+	usersColl := db.Collection("users")
 
 	var user models.User
 	if err := usersColl.FindOne(context.Background(), bson.M{"email": email}).Decode(&user); err != nil {

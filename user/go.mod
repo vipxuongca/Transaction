@@ -8,6 +8,8 @@ require (
 	golang.org/x/oauth2 v0.33.0
 )
 
+require github.com/rs/cors v1.11.1 // indirect
+
 require github.com/golang-jwt/jwt/v5 v5.3.0 // direct
 
 require (

@@ -1,16 +1,19 @@
 import { TransactionContext } from "./TransactionContext";
-import { useState, useContext, useEffect } from "react";
-import { toast } from "react-toastify";
-import Swal from "sweetalert2";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { userApi, transactionApi } from "../../api/api";
 
 const TransactionContextProvider = (props) => {
-  // import context
   const navigate = useNavigate();
   const [token, setToken] = useState(localStorage.getItem("token") || "");
 
-  // states
+  // Sync token with localStorage
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
+    }
+  }, [token]);
 
   const value = {
     token,

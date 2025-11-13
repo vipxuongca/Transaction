@@ -8,7 +8,7 @@ const UserPage = () => {
   // Fetch user info
   const fetchUser = async () => {
     try {
-      const res = await api.get("http://localhost:8080/user"); // backend endpoint to get current user
+      const res = await userApi.single(); // use the proper API helper
       setUser(res.data);
     } catch (err) {
       console.error(err);
@@ -20,9 +20,15 @@ const UserPage = () => {
     fetchUser();
   }, []);
 
-  const logout = () => {
+  // Logout user
+  const logout = async () => {
+    try {
+      await userApi.logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
     localStorage.removeItem("token");
-    window.location.href = "/login"; // redirect to login page
+    window.location.href = "/login";
   };
 
   if (!user) return <div>Loading...</div>;
@@ -35,10 +41,12 @@ const UserPage = () => {
           <span className="font-semibold">Email:</span> {user.email}
         </p>
         <p>
-          <span className="font-semibold">Provider:</span> {user.provider || "local"}
+          <span className="font-semibold">Provider:</span>{" "}
+          {user.provider || "local"}
         </p>
         <p>
-          <span className="font-semibold">Provider ID:</span> {user.provider_id || "-"}
+          <span className="font-semibold">Provider ID:</span>{" "}
+          {user.provider_id || "-"}
         </p>
         <button
           onClick={logout}

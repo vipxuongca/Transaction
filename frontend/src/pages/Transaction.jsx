@@ -6,15 +6,16 @@ const TransactionPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("income"); // income or expense
+  const [type, setType] = useState("income"); // "income" or "expense"
 
-  // Fetch transactions
+  // Fetch all transactions
   const fetchTransactions = async () => {
     try {
-      const res = await transactionApi.get("http://localhost:8080/transactions");
+      const res = await transactionApi.getAllTransactions();
       setTransactions(res.data);
     } catch (err) {
       console.error(err);
+      Swal.fire("Error", "Failed to fetch transactions", "error");
     }
   };
 
@@ -22,11 +23,11 @@ const TransactionPage = () => {
     fetchTransactions();
   }, []);
 
-  // Add transaction
+  // Add new transaction
   const addTransaction = async () => {
     if (!amount || !description) return;
     try {
-      await transactionApi.post("http://localhost:8080/transactions", {
+      await transactionApi.createTransaction({
         amount: parseFloat(amount),
         description,
         type,
@@ -43,7 +44,7 @@ const TransactionPage = () => {
   // Delete transaction
   const deleteTransaction = async (id) => {
     try {
-      await transactionApi.delete(`http://localhost:8080/transactions/${id}`);
+      await transactionApi.deleteTransaction(id);
       fetchTransactions();
     } catch (err) {
       console.error(err);

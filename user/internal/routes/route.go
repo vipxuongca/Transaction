@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/go-chi/chi/v5"
-	"oauth-service/internal/handler"
+	"oauth-service/internal/handlers"
 )
 
 func Register(r *chi.Mux) {

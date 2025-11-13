@@ -1,7 +1,9 @@
 import api from "./base";
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API;
+const BASE = import.meta.env.VITE_API_USER;
+const BASE_TRANSACTION = import.meta.env.VITE_API_TRANSACTION;
+const BASE_REPORT = import.meta.env.VITE_API_REPORT;
 const apiPublic = axios.create({
   withCredentials: true,
   headers: {
@@ -30,27 +32,21 @@ export const userApi = {
 };
 
 export const transactionApi = {
-  createAddress(newAddress) {
-    return api.post(`${BASE_DETAIL}/add`, newAddress)
-  },
-  getAllAddress() {
-    return api.get(`${BASE_DETAIL}/`);
+  createTransaction(data) {
+    return api.post(`${BASE_TRANSACTION}`, data);
   },
 
-  getDefaultAddress() {
-    return api.get(`${BASE_DETAIL}/default`);
+  getAllTransactions() {
+    return api.get(`${BASE_TRANSACTION}`);
   },
 
-  updateAddress(id, data) {
-    return api.post(`${BASE_DETAIL}/edit/${id}`, data);
+  deleteTransaction(id) {
+    return api.delete(`${BASE_TRANSACTION}/${id}`);
   },
 
-  deleteAddress(id) {
-    return api.delete(`${BASE_DETAIL}/delete/${id}`);
-  },
-
-  setDefaultAddress(id) {
-    return api.patch(`${BASE_DETAIL}/default/${id}`);
+  getReport() {
+    return api.get(`${BASE_REPORT} `);
   }
 };
+
 

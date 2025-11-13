@@ -21,7 +21,7 @@ func RegisterRoutes() http.Handler {
 			protected.Use(appmw.VerifyToken)
 
 			// Transactions
-			protected.Route("/transactions", func(tr chi.Router) {
+			protected.Route("/transaction", func(tr chi.Router) {
 				tr.Post("/", handlers.CreateTransaction)
 				tr.Get("/", handlers.ListTransactions)
 				tr.Delete("/{id}", handlers.DeleteTransaction)

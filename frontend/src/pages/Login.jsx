@@ -7,7 +7,7 @@ import { userApi } from "../../api/api";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { setToken } = useContext(TransactionContext);
+  const { token, setToken } = useContext(TransactionContext);
   const navigate = useNavigate();
 
   const onSubmitHandler = async (e) => {

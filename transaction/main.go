@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/rs/cors"
 	"transaction/config"
 	"transaction/internal/handlers"
 	"transaction/internal/routes"
@@ -14,10 +15,8 @@ import (
 )
 
 func main() {
-	// Load configuration (Mongo URI, Port, etc.)
 	config.LoadConfig()
 
-	// Initialize MongoDB
 	db := utils.GetDB()
 
 	repo, err := transactions.NewRepository(db, "transactions", 10*time.Second)
@@ -25,16 +24,22 @@ func main() {
 		log.Fatalf("failed to initialize repository: %v", err)
 	}
 
-	// Initialize JWT secret
 	secret := []byte(os.Getenv("JWT_SECRET"))
 	utils.InitJWT(secret)
 	handlers.InitHandler(repo, secret)
 
-	// Register routes
 	r := routes.RegisterRoutes()
 
+	// cors set up
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}).Handler(r)
+
 	log.Printf("Transaction service running on port %s", config.Port)
-	if err := http.ListenAndServe(":"+config.Port, r); err != nil {
+	if err := http.ListenAndServe(":"+config.Port, corsHandler); err != nil {
 		log.Fatal(err)
 	}
 }
