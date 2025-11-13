@@ -53,15 +53,15 @@ func (t *Transaction) Validate() error {
 
 // Repository provides DB operations for transactions.
 type Repository struct {
-	coll *mongo.Collection
+	Coll *mongo.Collection
 	// default timeout for operations
-	opTimeout time.Duration
+	OpTimeout time.Duration
 }
 
 // NewRepository constructs repository and ensures indexes.
-func NewRepository(db *mongo.Database, collectionName string, opTimeout time.Duration) (*Repository, error) {
-	coll := db.Collection(collectionName)
-	r := &Repository{coll: coll, opTimeout: opTimeout}
+func NewRepository(db *mongo.Database, CollectionName string, OpTimeout time.Duration) (*Repository, error) {
+	Coll := db.Collection(CollectionName)
+	r := &Repository{Coll: Coll, OpTimeout: OpTimeout}
 
 	// create indexes: user_id + date, user_id + category, user_id + type
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -88,7 +88,7 @@ func NewRepository(db *mongo.Database, collectionName string, opTimeout time.Dur
 		},
 	}
 
-	_, err := coll.Indexes().CreateMany(ctx, indexes)
+	_, err := Coll.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		return nil, err
 	}
@@ -111,10 +111,10 @@ func (r *Repository) CreateTransaction(ctx context.Context, t *Transaction) (*Tr
 		t.Date = now
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	ctx, cancel := context.WithTimeout(ctx, r.OpTimeout)
 	defer cancel()
 
-	res, err := r.coll.InsertOne(ctx, t)
+	res, err := r.Coll.InsertOne(ctx, t)
 	if err != nil {
 		return nil, err
 	}
@@ -126,12 +126,12 @@ func (r *Repository) CreateTransaction(ctx context.Context, t *Transaction) (*Tr
 
 // GetByID retrieves a transaction by its ID and owner userID.
 func (r *Repository) GetByID(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (*Transaction, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	ctx, cancel := context.WithTimeout(ctx, r.OpTimeout)
 	defer cancel()
 
 	var out Transaction
 	filter := bson.M{"_id": id, "user_id": userID}
-	err := r.coll.FindOne(ctx, filter).Decode(&out)
+	err := r.Coll.FindOne(ctx, filter).Decode(&out)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -147,14 +147,14 @@ func (r *Repository) UpdateTransaction(ctx context.Context, id primitive.ObjectI
 	update["updated_at"] = time.Now().UTC()
 	updateDoc := bson.M{"$set": update}
 
-	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	ctx, cancel := context.WithTimeout(ctx, r.OpTimeout)
 	defer cancel()
 
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 	filter := bson.M{"_id": id, "user_id": userID}
 
 	var updated Transaction
-	err := r.coll.FindOneAndUpdate(ctx, filter, updateDoc, opts).Decode(&updated)
+	err := r.Coll.FindOneAndUpdate(ctx, filter, updateDoc, opts).Decode(&updated)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -166,10 +166,10 @@ func (r *Repository) UpdateTransaction(ctx context.Context, id primitive.ObjectI
 
 // DeleteTransaction deletes a transaction by id and owner. Returns whether deleted.
 func (r *Repository) DeleteTransaction(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (bool, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	ctx, cancel := context.WithTimeout(ctx, r.OpTimeout)
 	defer cancel()
 
-	res, err := r.coll.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
+	res, err := r.Coll.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
 	if err != nil {
 		return false, err
 	}
@@ -194,7 +194,7 @@ type ListOptions struct {
 
 // ListTransactions returns transactions matching filters with pagination.
 func (r *Repository) ListTransactions(ctx context.Context, opts ListOptions) ([]Transaction, int64, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	ctx, cancel := context.WithTimeout(ctx, r.OpTimeout)
 	defer cancel()
 
 	filter := bson.M{"user_id": opts.UserID}
@@ -230,7 +230,7 @@ func (r *Repository) ListTransactions(ctx context.Context, opts ListOptions) ([]
 	}
 
 	// count total
-	total, err := r.coll.CountDocuments(ctx, filter)
+	total, err := r.Coll.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -250,7 +250,7 @@ func (r *Repository) ListTransactions(ctx context.Context, opts ListOptions) ([]
 	}
 	findOpts.SetSort(bson.D{{Key: sortField, Value: order}})
 
-	cursor, err := r.coll.Find(ctx, filter, findOpts)
+	cursor, err := r.Coll.Find(ctx, filter, findOpts)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -281,7 +281,7 @@ type MonthlySummaryRow struct {
 
 // GetMonthlySummary returns totals grouped by year-month and type for a user in a date range.
 func (r *Repository) GetMonthlySummary(ctx context.Context, userID primitive.ObjectID, start, end time.Time) ([]MonthlySummaryRow, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	ctx, cancel := context.WithTimeout(ctx, r.OpTimeout)
 	defer cancel()
 
 	match := bson.M{"user_id": userID, "date": bson.M{"$gte": start, "$lte": end}}
@@ -313,7 +313,7 @@ func (r *Repository) GetMonthlySummary(ctx context.Context, userID primitive.Obj
 		{{Key: "$sort", Value: bson.D{{Key: "year", Value: 1}, {Key: "month", Value: 1}}}},
 	}
 
-	cursor, err := r.coll.Aggregate(ctx, pipeline)
+	cursor, err := r.Coll.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}

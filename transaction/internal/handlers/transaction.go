@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"transaction/models"
 )
 
@@ -41,12 +44,58 @@ func GetReport(w http.ResponseWriter, r *http.Request) {
 	start := time.Date(now.Year(), now.Month()-5, 1, 0, 0, 0, 0, time.UTC)
 	end := now
 
-	result, err := Repo.GetMonthlySummary(r.Context(), userID, start, end)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	// Match transactions for this user in date range
+	match := bson.M{
+		"user_id": userID,
+		"date": bson.M{
+			"$gte": start,
+			"$lte": end,
+		},
+	}
+
+	// Aggregate total amount per type and currency
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: match}},
+		{{
+			Key: "$group",
+			Value: bson.M{
+				"_id": bson.M{
+					"type":     "$type",
+					"currency": "$currency",
+				},
+				"total_cents": bson.M{"$sum": "$amount_cents"},
+				"count":       bson.M{"$sum": 1},
+			},
+		}},
+		{{
+			Key: "$project",
+			Value: bson.M{
+				"type":        "$_id.type",
+				"currency":    "$_id.currency",
+				"total_cents": 1,
+				"count":       1,
+				"_id":         0,
+			},
+		}},
+	}
+
+	cursor, err := Repo.Coll.Aggregate(ctx, pipeline)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
-	writeJSON(w, http.StatusOK, result)
+	defer cursor.Close(ctx)
+
+	var report []bson.M
+	if err := cursor.All(ctx, &report); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, report)
 }
 
 func DeleteTransaction(w http.ResponseWriter, r *http.Request) {
@@ -99,11 +148,10 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		AmountCents int64  `json:"amount_cents"`
 		Type        string `json:"type"`
-		Notes       string `json:"notes"` 
+		Notes       string `json:"notes"`
 		Category    string `json:"category"`
 		Currency    string `json:"currency"`
 	}
-	
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid body"})

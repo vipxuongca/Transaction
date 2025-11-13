@@ -90,7 +90,7 @@ const TransactionPage = () => {
             <option value="expense">Chi</option>
           </select>
           <button
-            onClick={addTransaction}
+            type="submit"
             className="bg-blue-500 text-white px-4 py-2 rounded"
           >
             Thêm giao dịch
